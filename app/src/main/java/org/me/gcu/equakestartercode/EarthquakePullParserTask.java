@@ -17,6 +17,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+// Nicola Dochnenko S1915348
 public class EarthquakePullParserTask implements Runnable {
     private MainActivity mainActivity;
     private String xmlString = "";
@@ -29,7 +30,7 @@ public class EarthquakePullParserTask implements Runnable {
     }
 
     private void loadStringFromUrl() {
-        URL aurl;
+        URL url;
         URLConnection yc;
         BufferedReader in = null;
         String inputLine = "";
@@ -38,10 +39,11 @@ public class EarthquakePullParserTask implements Runnable {
 
         try {
             Log.e("MyTag", "in try");
-            aurl = new URL(url);
-            yc = aurl.openConnection();
+            url = new URL(this.url);
+            yc = url.openConnection();
             in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
             Log.e("MyTag", "after ready");
+
             //
             // Now read the data. Make sure that there are no specific hedrs
             // in the data file that you need to ignore.
@@ -51,6 +53,7 @@ public class EarthquakePullParserTask implements Runnable {
                 xmlString = xmlString + inputLine;
                 Log.e("MyTag", inputLine);
             }
+
             in.close();
         } catch (IOException ae) {
             Log.e("MyTag", "IOException in run");

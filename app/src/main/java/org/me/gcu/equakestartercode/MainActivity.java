@@ -1,12 +1,15 @@
 package org.me.gcu.equakestartercode;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
 import android.os.Bundle;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -15,6 +18,12 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import org.me.gcu.equakestartercode.Fragments.FragmentList;
+import org.me.gcu.equakestartercode.Fragments.FragmentMap;
+import org.me.gcu.equakestartercode.Fragments.FragmentStatistics;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,16 +31,17 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements OnClickListener
+// Nicola Dochnenko S1915348
+public class MainActivity extends AppCompatActivity
 {
-    private TextView rawDataDisplay;
-    private Button startButton;
-    private String result = "";
-    private String url1="";
     private String urlSource="http://quakes.bgs.ac.uk/feeds/MhSeismology.xml";
-    private TableLayout quakeTable;
-    private SearchView searchBar;
-    private Button searchButton;
+
+    FragmentList       fragList;
+    FragmentMap        fragMap;
+    FragmentStatistics fragStatistics;
+    BottomNavigationView bottomNav;
+
+    private ArrayList<EarthquakeItem> earthquakes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -40,64 +50,61 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
         setContentView(R.layout.activity_main);
         Log.e("MyTag","in onCreate");
 
-        // Set up the raw links to the graphical components
-        quakeTable = (TableLayout)findViewById(R.id.eqTable);
-        searchBar = (SearchView)findViewById(R.id.searchBox);
-        searchButton = (Button)findViewById(R.id.searchButton);
-        searchButton.setOnClickListener(this);
+        bottomNav = findViewById(R.id.bottomNavigationView);
+        bottomNav.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
 
-        Log.e("MyTag","after startButton");
+        fragList = new FragmentList();
+        fragList.setMainActivityInstance(this);
 
-        // More Code goes here
+        fragMap = new FragmentMap();
+        fragMap.setMainActivityInstance(this);
+
+        fragStatistics = new FragmentStatistics();
+        fragStatistics.setMainActivityInstance(this);
+
+        getSupportFragmentManager()
+            .beginTransaction()
+            .replace(R.id.navigationFragment, fragList)
+            .commit();
+
+        this.reloadAllEarthquakes();
     }
 
-    public void onClick(View aview)
-    {
-        Log.e("MyTag","in onClick");
-        startProgress();
-        Log.e("MyTag","after startProgress");
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        Fragment selectedFragment = null;
+
+        switch (item.getItemId()) {
+            case R.id.NavBtn_List:
+                selectedFragment = this.fragList;
+                break;
+            case R.id.NavBtn_Map:
+                selectedFragment = this.fragMap;
+                break;
+            case R.id.NavBtn_Info:
+                selectedFragment = this.fragStatistics;
+                break;
+        }
+
+        // It will help to replace the one fragment to other.
+        getSupportFragmentManager()
+            .beginTransaction()
+            .replace(R.id.navigationFragment, selectedFragment)
+            .commit();
+        return true;
     }
 
-    public void startProgress()
+    public void reloadAllEarthquakes()
     {
         // Run network access on a separate thread;
         new Thread(new EarthquakePullParserTask(this, urlSource)).start();
-    } //
+    }
 
     // On UI Thread
     public void loadEarthquakeList(ArrayList<EarthquakeItem> earthquakes) {
         // Earthquakes have loaded
 
-        for(EarthquakeItem ei : earthquakes) {
-            Log.e("Earthquakes", String.format("%f,%f - %s", ei.getLat(), ei.getLat(), ei.getTitle()));
-
-            // Finding table
-            TableLayout tbl = (TableLayout)findViewById(R.id.eqTable);
-            tbl.removeAllViews(); // Clears rows
-
-            // Creating table rows
-            TableRow row = new TableRow(tbl.getContext());
-            row.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
-
-            // Content for location table row
-            TextView location = new TextView(this);
-            location.setText(ei.getTitle());
-            location.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
-
-            // Content for magnitude table row
-            TextView magnitude = new TextView(this);
-            magnitude.setText(ei.getTitle());
-            magnitude.setGravity(Gravity.RIGHT);
-            magnitude.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
-
-            row.addView(location);
-            row.addView(magnitude);
-
-            tbl.addView(row, new TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT, TableLayout.LayoutParams.WRAP_CONTENT));
-        }
-    }
-
-    public TextView getRawDataDisplay() {
-        return rawDataDisplay;
+        this.fragMap.onEarthquakeListReady(earthquakes);
+        this.fragList.onEarthquakeListReady(earthquakes);
+        this.fragStatistics.onEarthquakeListReady(earthquakes);
     }
 }

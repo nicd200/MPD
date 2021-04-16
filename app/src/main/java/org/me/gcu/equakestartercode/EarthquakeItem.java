@@ -1,14 +1,18 @@
 package org.me.gcu.equakestartercode;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
+// Nicola Dochnenko S1915348
 public class EarthquakeItem {
     private String title;
     private String description;
     private String link;
     private String category;
     private float Lat, Long;
+    private EarthquakeData Data = null;
 
     public String getTitle() {
         return title;
@@ -24,15 +28,7 @@ public class EarthquakeItem {
 
     public void setDescription(String description) {
         this.description = description;
-
-        ArrayList<String> eqData = null;
-        HashMap<String, String> descriptionData = new HashMap<>();
-        String[] splitData = description.split(";");
-
-        String magnitude = splitData[4];
-        String location = splitData[1];
-        String depth = splitData[3];
-
+        Data = new EarthquakeData(description.split(";"));
     }
 
     public String getLink() {
@@ -65,5 +61,9 @@ public class EarthquakeItem {
 
     public void setLong(float aLong) {
         Long = aLong;
+    }
+
+    public EarthquakeData getData() {
+        return Data;
     }
 }
